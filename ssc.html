@@ -1,0 +1,359 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"></meta>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"></meta>
+<title></title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"></link>
+
+<!-- MathJax -->
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+  options: { renderActions: { addMenu: [] } },
+  startup: { typeset: false }
+};
+</script>
+<script async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #f8f8f8;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.quiz-container {
+  position: absolute;
+  top: -40px;
+  bottom: 20px;
+  left: -10px;
+  right: 0;
+  overflow-y: auto;
+  background: #fff;
+  height:80vh;
+}
+
+/* HEADER */
+.quiz-header {
+  background-color: #1b4332;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  font-weight: 600;
+  font-size: 18px;
+  position: fixed;
+  top: 0;
+  left:0;
+  right:0;
+  z-index: 10;
+}
+
+/* BODY */
+.quiz-body {
+  flex: 1;
+  padding: 20px 20px 10px;
+  overflow-y:auto;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Toggle button */
+.toggle-nav-btn {
+  display: block;
+  width: 100%;
+  background: #1b4332;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.toggle-nav-btn:hover {
+  background: #14532d;
+}
+
+/* Question navigation */
+.question-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  max-height: 200px;
+  transition: max-height 0.3s ease;
+}
+.question-nav.hidden {
+  max-height: 0;
+  margin: 0;
+}
+
+/* Buttons */
+.question-nav button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.question-nav button.active {
+  border: 2px solid #1b4332;
+}
+.question-nav button.answered {
+  background: #1b4332;
+  color: #fff;
+}
+
+#question-container h4 { font-size: 16px; margin-bottom: 8px; color: #333; }
+#question-container p { font-size: 15px; color: #444; }
+
+.options label {
+  display: block;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.options label:hover { border-color: #1e3a8a; background: #f0f4ff; }
+.correct { border-color: green !important; background: #e8fce8 !important; }
+.wrong { border-color: red !important; background: #ffe8e8 !important; }
+
+/* FOOTER */
+.quiz-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right:0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  background-color: #1b4332;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-top: 1px solid #ddd;
+  padding: 10px;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+}
+.quiz-footer button {
+  flex: 1;
+  background:white;
+  color: #1b4332;
+  border: none;
+  padding: 10px;
+  border-radius: 25px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin: 0 5px;
+}
+.quiz-footer button:hover { background: white; }
+
+/* RESULTS */
+#result-section {
+  background: #f9f9f9;
+  border-top: 2px solid #1e3a8a;
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: 10px;
+}
+#result-section h3 { color: #1e3a8a; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- USER INFO FORM -->
+<div id="user-form" style="margin-top: 80px; text-align: center;">
+  <h3></h3>
+  <input id="userName" placeholder="Enter your Full name" required="" style="border-radius: 8px; border: 1px solid #ccc; max-width: 300px; padding: 10px; width: 80%;" type="text" />
+  <br /><br />
+  <button onclick="startQuiz()" style="background: #1b4332; border-radius: 8px; border: none; color: white; padding: 10px 20px;">
+    Start Quiz
+  </button>
+</div>
+
+<!-- QUIZ AREA -->
+<div id="quiz-area" style="display: none;">
+<div class="quiz-container">
+
+  <div class="quiz-header">
+    <div id="quiz-title">Quiz</div>
+    <div>⏱️ <span id="timer"></span></div>
+    <i class="fa-solid fa-expand full-icon" onclick="toggleFullscreen()" title="Fullscreen"></i>
+  </div>
+
+  <div class="quiz-body">
+    <div class="stats">
+      <span id="answered">Answered: 0</span>
+      <span id="not-answered">Not answered: 0</span>
+    </div>
+
+    <button class="toggle-nav-btn" onclick="toggleNav()">🔽 Show/Hide Questions</button>
+    <div class="question-nav" id="question-nav"></div>
+    <h3 id="quiz-title"></h3>
+    <div id="question-container"></div>
+    <div class="hidden" id="result-section"></div>
+  </div>
+
+  <div class="quiz-footer">
+    <button onclick="prevQuestion()">Previous</button>
+    <button onclick="submitQuiz()">Submit</button>
+    <button onclick="nextQuestion()">Next</button>
+  </div>
+</div>
+</div>
+
+<script>
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykBUkWcGjCh4SJR3VExsr8hm6UO3pg6-tp3tx4YWeI0_r2EkhVsos3YtVVHOlZVgHdJg/exec";
+const QUIZ_TITLE = "SSC CGL TIER 1 ENGLISH 26-09-2024";
+const questions = [
+  { q:" <b>In the following passage, some words have been deleted. Read the passage carefully and select the most appropriate option to fill ineach blank.</b><br> 2022 sees us entering a third year of the pandemic, and the harm <b>(1)</b>________ children is increasingly evident: A record rise in child poverty. Setbacks to progress on <b>(2)</b>_________ vaccinations. Disruption to education for entire generation. That harm <b>(3)</b>________ as an unintended side effect of the world's efforts to manage the crisis. COVID has been a uniquely dis-equalizing crisis. Lopsided <b>(4)</b>________ vaccines aside, learning losses have been greatest among poorest children, and job losses have been disproportionately borne by women and youth. What next for the world’s children in the year ahead? As in the past two years, prospects for children will continue to hinge <b>(5)</b>________ on the pandemic and how it is managed.<br> <b>Select the most appropriate option to fill in blank No. 1</b>",options:["does to", "did to"," done to","seems to"],answerId:2},
+  { q: "<b>In the following passage, some words have been deleted. Read the passage carefully and select the most appropriate option to fill ineach blank.</b><br> 2022 sees us entering a third year of the pandemic, and the harm <b>(1)</b>________ children is increasingly evident: A record rise in child poverty. Setbacks to progress on <b>(2)</b>_________ vaccinations. Disruption to education for entire generation. That harm <b>(3)</b>________ as an unintended side effect of the world's efforts to manage the crisis. COVID has been a uniquely dis-equalizing crisis. Lopsided <b>(4)</b>________ vaccines aside, learning losses have been greatest among poorest children, and job losses have been disproportionately borne by women and youth. What next for the world’s children in the year ahead? As in the past two years, prospects for children will continue to hinge <b>(5)</b>________ on the pandemic and how it is managed.<br> <b>Select the most appropriate option to fill in blank No. 2</b>",options:["different","irregular","routine","similar"], answerId:2},
+  { q: "<b>In the following passage, some words have been deleted. Read the passage carefully and select the most appropriate option to fill ineach blank.</b><br> 2022 sees us entering a third year of the pandemic, and the harm <b>(1)</b>________ children is increasingly evident: A record rise in child poverty. Setbacks to progress on <b>(2)</b>_________ vaccinations. Disruption to education for entire generation. That harm <b>(3)</b>________ as an unintended side effect of the world's efforts to manage the crisis. COVID has been a uniquely dis-equalizing crisis. Lopsided <b>(4)</b>________ vaccines aside, learning losses have been greatest among poorest children, and job losses have been disproportionately borne by women and youth. What next for the world’s children in the year ahead? As in the past two years, prospects for children will continue to hinge <b>(5)</b>________ on the pandemic and how it is managed.<br> <b>Select the most appropriate option to fill in blank No. 3</b>",options:["had emerged","has emerged","have emerged","was emerged"], answerId:1},
+  { q: "<b>In the following passage, some words have been deleted. Read the passage carefully and select the most appropriate option to fill ineach blank.</b><br> 2022 sees us entering a third year of the pandemic, and the harm <b>(1)</b>________ children is increasingly evident: A record rise in child poverty. Setbacks to progress on <b>(2)</b>_________ vaccinations. Disruption to education for entire generation. That harm <b>(3)</b>________ as an unintended side effect of the world's efforts to manage the crisis. COVID has been a uniquely dis-equalizing crisis. Lopsided <b>(4)</b>________ vaccines aside, learning losses have been greatest among poorest children, and job losses have been disproportionately borne by women and youth. What next for the world’s children in the year ahead? As in the past two years, prospects for children will continue to hinge <b>(5)</b>________ on the pandemic and how it is managed.<br> <b>Select the most appropriate option to fill in blank No. 4</b>",options:["keeps to","access to","seems to","assess to"], answerId:1},
+  { q: "<b>In the following passage, some words have been deleted. Read the passage carefully and select the most appropriate option to fill ineach blank.</b><br> 2022 sees us entering a third year of the pandemic, and the harm <b>(1)</b>________ children is increasingly evident: A record rise in child poverty. Setbacks to progress on <b>(2)</b>_________ vaccinations. Disruption to education for entire generation. That harm <b>(3)</b>________ as an unintended side effect of the world's efforts to manage the crisis. COVID has been a uniquely dis-equalizing crisis. Lopsided <b>(4)</b>________ vaccines aside, learning losses have been greatest among poorest children, and job losses have been disproportionately borne by women and youth. What next for the world’s children in the year ahead? As in the past two years, prospects for children will continue to hinge <b>(5)</b>________ on the pandemic and how it is managed.<br> <b>Select the most appropriate option to fill in blank No. 5</b>",options:["almost","minor","foremost","mostdifferent"], answerId:2},
+  { q:"Select the sentence that contains a spelling error.",options:["Researchers recommend that pesticides should not be used indiscriminately as they eliminate biodiversity for future generations.","Journalism is often the work of painstaking rigour and perseverence that detail the socio-political experiences of our worlds.","The venerated singer was also secretive, moody and very intense, famous for erratic and difficult behaviour","Elephants are in trouble mainly because people desire ivory trinkets that are made of tusks, often gruesomely killing them to achieve their purpose."],answerId: 1},
+  { q:"Select the most appropriate option that can substitute the underlined segment in the given sentence.<br> RN Right’s literary works helped redefine discussions <u>in race relations in America</u> in the mid-20th century.",options:["by race relations in America","beside race relations in America","to race relations in America","of race relations in America"], answerId:3 },
+  { q:"Select the most appropriate option that can substitute the underlined segment in the given sentence.<br>The chair I have bought recently <u>is costly</u> than what I bought last year.",options:["is the costliest","is costlier","was costly","will be costly"], answerId:1},
+  { q:"Select the most appropriate verb / verb phrase to fill in the blank.<br>Akshaya ______________ hard for the entrance exam and received a high score.", options:["studies","has studied","was studied","studied"], answerId: 3},
+   { q:"Select the option that can be used as a one-word substitute for the underlined group of words.<br>His parents didn’t allow him to enrol in the arts college because he is a <u>dabbler in arts, science or literature.</u>", options:["Connoisseur","Taciturn","Dilettante","Ignoramus"], answerId:2 },
+  { q:"   Select the most appropriate synonym of the underlined word.<br> He was the most <u>honest</u> and good-hearted man that she had ever met.", options: ["Deceptive","Sincere","Biased","Fake"], answerId:1 },
+    { q:"Select the most appropriate ANTONYM of the underlined word in the following sentence.<br>I do not have any <u>access</u> to the information in this matter.", options:["Doubt","Reach","Clue","Denial"], answerId:3 },
+     { q: " Parts of the following sentence have been given as options. Select the option that contains an error.<br>The teacher asked him not to keep disturbing the class, but it had no affect.", options:["but it had no affect.","him not to keep","disturbing the class","The teacher asked"], answerId:0},
+      { q:"Select the most appropriate ANTONYM of the given word.<br>Profuse", options:["Scarce","Humble","Prompt","Just"], answerId: 0},
+  { q: "Select the most appropriate synonym of the underlined word in the given sentence.<br>Even when he was left with plenty of fortune, he lived a <u>frugal</u> life.", options:["Thrifty","Purposeless","Extraordinary","Hardworking"],answerId:0},
+  { q:"Select the most appropriate option to substitute the underlined segment in the given sentence.<br> Ranveer never has the habit of <u>making a beeline</u> for his academic activities.", options:["behaving abnormally","selecting inconsiderately","going straight and quick","immediately responding to things"], answerId:2 },
+{ q:"Select the option that expresses the given sentence in passive voice.<br>Rohit did not slap Kunal.", options:["Kunal was not being slapped by Rohit.","Kunal had not been slapped by Rohit.","Kunal was not slapped by Rohit.","Kunal has not been slapped by Rohit."], answerId:3},
+{ q:"Select the most appropriate meaning of the underlined idiom.<br>The company understood that these small protests of employees regarding low wages were just <u>the tip of the iceberg.</u>", options:["A small, noticeable part of a problem, the total size of which is non-existent","A small, noticeable part of a problem, the total size of which is solvable","A large part of a problem which is really noticeable","A small, noticeable part of a problem, the total size of which is really much greater"], answerId:2},
+  { q:"Given below are four jumbled sentences. Select the option that gives their correct logical sequence. <br>A. The world’s biggest radio telescope is in Puerto Rico.<br>B. It is called Arecibo dish.<br>C. It was built 40 years ago.<br>D. It is also 300 metres across.", options:["ABDC","CBDA","DCAB","DCBA"],answerId:0},
+    { q: "Select the option that can be used as a one-word substitute for the given group of words.<br>One who looks at the bright side of things/situations", options: ["Saint","Optimist","Pessimist","Scientist"], amswerId:1 },
+      { q: "Select the INCORRECTLY spelt word.", options:["Recieve","Necessary","Possession","Accommodate"], answerId: 0},
+    { q:"Select the option that expresses the given sentence in passive voice.<br>Will you give me an independent project?", options: ["Will you be given an independent project by me?","Would an independent project be given?","Would I be given an independent project?","Will I be given an independent project by you?"], answerId:3 },
+  { q:"Select the most appropriate ANTONYM to replace the word in brackets.<br>The author's writing was so captivating that readers were [enthralled], while the other book left them completely uninterested.", options: ["interested","agreement","bored","intrigued"], answerId: 2},
+  { q:"Select the most appropriate ANTONYM of the underlined word in the given sentence.<br>This library building is very high and has 25 floors.",options:["Low","Sturdy","Hale","Elevated"], answerId:0},
+  { q:"In the given question, a statement divided into different segments is given. Rearrange all the segments to form a coherent statement.<br>O: that the Soviet army had liberated<br>P: from the fascist forces came under<br>Q: the east European countries<br>R: the control of the USSR<br>S: after the Second World War", options: ["SROPQ","POQSR","POSQR","SQOPR"], answerId:3},
+      
+   
+   ];
+
+let current=0,answers=Array(questions.length).fill(null),submitted=false;
+let timeLeft=questions.length*60,timerInterval;
+
+function startQuiz(){
+  const name=document.getElementById("userName").value.trim();
+  if(!name){alert("Please enter your name first.");return;}
+  document.getElementById("user-form").style.display="none";
+  document.getElementById("quiz-area").style.display="block";
+  renderNav();renderQuestion();startTimer();
+}
+
+function toggleNav(){document.getElementById("question-nav").classList.toggle("hidden");}
+function renderNav(){
+  const nav=document.getElementById("question-nav");nav.innerHTML="";
+  questions.forEach((_,i)=>{
+    const b=document.createElement("button");
+    b.textContent=i+1;
+    b.className=(i===current?"active ":"")+(answers[i]!=null?"answered":"");
+    b.onclick=()=>{current=i;renderQuestion()};
+    nav.appendChild(b);
+  });updateStats();
+}
+function renderQuestion(){
+  const q=questions[current];
+  const c=document.getElementById("question-container");
+  let h=`<h4>Question ${current+1} of ${questions.length}</h4><p>${q.q}</p><div class="options">`;
+  q.options.forEach((o,i)=>{
+    let cls="";
+    if(submitted){
+      if(i===q.answerId) cls="correct";
+      else if(answers[current]===i && i!==q.answerId) cls="wrong";
+    }
+    h+=`<label class="${cls}"><input type="radio" name="opt" value="${i}" ${answers[current]===i?'checked':''} ${submitted?'disabled':''} onchange="selectOpt(${i})">${o}</label>`;
+  });
+  h+="</div>";c.innerHTML=h;renderNav();
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([c]);
+}
+function selectOpt(i){if(submitted)return;answers[current]=i;renderNav();}
+function nextQuestion(){if(current<questions.length-1){current++;renderQuestion();}}
+function prevQuestion(){if(current>0){current--;renderQuestion();}}
+function updateStats(){
+  const a=answers.filter(x=>x!==null).length;
+  document.getElementById("answered").textContent="Answered: "+a;
+  document.getElementById("not-answered").textContent="Not answered: "+(questions.length-a);
+}
+function startTimer(){
+  updateTimer();timerInterval=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=0){clearInterval(timerInterval);submitQuiz();}},1000);
+}
+function updateTimer(){
+  const m=Math.floor(timeLeft/60),s=timeLeft%60;
+  document.getElementById("timer").textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+async function submitQuiz(){
+  if(submitted)return;submitted=true;clearInterval(timerInterval);
+  let correct=0,wrong=0;
+  questions.forEach((q,i)=>{if(answers[i]!=null){if(answers[i]===q.answerId)correct++;else wrong++;}});
+  const skipped=questions.length-(correct+wrong);
+  const total=questions.length;
+  const score=Math.round((correct/total)*100);
+  const name=document.getElementById("userName").value;
+  const payload = { quizTitle: QUIZ_TITLE, name, score, correct, wrong, skipped, total };
+
+  // Send data to Google Sheets
+  try {
+    await fetch(GOOGLE_SCRIPT_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+  } catch(e){console.error("Error sending data",e);}
+
+  const html=`<h3>Result Summary</h3>
+    <p><b>Name:</b> ${name}</p>
+    <p><b>Total Questions:</b> ${total}</p>
+    <p><b>Correct:</b> ${correct}</p>
+    <p><b>Wrong:</b> ${wrong}</p>
+    <p><b>Skipped:</b> ${skipped}</p>
+    <p><b>Score:</b> ${score}%</p>`;
+  document.getElementById("result-section").innerHTML=html;
+  document.getElementById("result-section").classList.remove("hidden");
+  renderQuestion();
+}
+
+// Fullscreen toggle
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(err=>alert(err.message));
+  } else {
+    document.exitFullscreen();
+  }
+}
+</script>
+
+</body>
+</html>
